@@ -1,0 +1,3 @@
+http://www.sqlskills.com/blogs/paul/tracking-page-splits-using-the-transaction-log/
+
+https://www.sqlskills.com/blogs/jonathan/tracking-problematic-pages-splits-in-sql-server-2012-extended-events-no-really-this-time/
