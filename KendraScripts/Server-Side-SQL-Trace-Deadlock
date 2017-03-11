@@ -1,0 +1,88 @@
+/***********************************************************************
+THIS OPTION USES A SERVER SIDE SQL TRACE TO PICK UP THE BPR.
+YOU ONLY NEED THIS *OR* ONE OF THE XEVENTS TRACES
+***********************************************************************/
+
+
+/* Modified from a script generated from SQL Server Profiler */
+/* Pre-requisites and notes: 
+	This works with SQL Server 2005 and higher
+	Change the filename to a relevant location on the server itself 
+	Tweak options to your preference (including the end date)
+  Code to stop and delete the trace is commented out at the end
+
+THIS CREATES AND STARTS A SERVER SIDE SQL TRACE
+*/
+
+declare @rc int;
+declare @TraceID int;
+declare @maxfilesizeMB bigint;
+declare @TraceEndDateTime datetime;
+declare @TraceFilename nvarchar(500);
+declare @rolloverfilecount int;
+
+set @TraceEndDateTime = '2020-12-12 00:00:00.000';
+set @maxfilesizeMB = 1024;
+set @TraceFilename = N'S:\XEvents\Deadlock-Graph';
+set @rolloverfilecount = 4;
+
+/* Create the basic server side trace */
+exec @rc = sp_trace_create 
+	@TraceID output, 
+	@options = 2 /* trace will use rollover files */, 
+	@tracefile = @TraceFilename, 
+	@maxfilesize = @maxfilesizeMB, 
+	@stoptime = @TraceEndDateTime,
+	@filecount = @rolloverfilecount;
+
+if (@rc != 0) goto error;
+
+/* Add the deadlock graph event and collect some columns */
+declare @on bit
+set @on = 1
+exec sp_trace_setevent @TraceID, 148, 1, @on
+exec sp_trace_setevent @TraceID, 148, 12, @on
+exec sp_trace_setevent @TraceID, 148, 14, @on
+
+
+/* Start the trace */
+exec sp_trace_setstatus @TraceID, 1
+
+/* Return list of traces to the caller */
+select * from sys.traces;
+GOTO finish
+
+error: 
+select ErrorCode=@rc
+
+finish: 
+GO
+
+
+
+/***********************************************************************
+Test a deadlock with the code here:
+	https://www.littlekendra.com/2016/09/13/deadlock-code-for-the-wideworldimporters-sample-database/
+***********************************************************************/
+
+
+
+/***********************************************************************
+STOP AND DELETE THE Deadlock-Graph Trace (when needed)
+***********************************************************************/
+
+--/* Get the trace id */
+--DECLARE @id int
+--SELECT @id=id
+--FROM sys.traces where path like '%Deadlock-Graph%';
+
+--/* Stop the trace by setting its status to 0 */
+--EXEC sp_trace_setstatus @traceid = @id , @status = 0; 
+
+--/* Delete the trace by setting the status to 2 */
+--EXEC sp_trace_setstatus @traceid = @id , @status = 2; 
+
+--/* Return remaining traces */
+--SELECT * FROM sys.traces;
+--GO
+
