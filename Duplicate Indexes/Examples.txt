@@ -1,0 +1,17 @@
+http://www.sqlskills.com/blogs/kimberly/removing-duplicate-indexes/
+
+USE [AdventureWorks2008];
+GO
+ 
+EXECUTE sp_SQLskills_SQL2008_finddupes @ObjName='Production.Document';
+GO
+
+USE [AdventureWorks2008];
+GO
+ 
+EXECUTE sp_SQLskills_SQL2008_finddupes;
+GO
+
+
+EXECUTE sp_msforeachdb 'USE ?; exec sp_SQLskills_SQL2008_finddupes';
+GO
